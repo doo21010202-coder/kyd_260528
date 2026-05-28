@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { ArrowDownIcon, BusIcon, CalendarOffIcon } from "lucide-react"
 import { StopSelector } from "./stop-selector"
 import { ShuttleResult } from "./shuttle-result"
+import { ShuttleMap } from "./shuttle-map"
 import { isServiceDay, getNextServiceInfo } from "@/lib/shuttle"
 import { ROUTE_STOP_ORDER } from "@/config/schedule"
 import type { StopId } from "@/types/shuttle"
@@ -84,6 +85,8 @@ export function ShuttleFinder({ now: nowProp }: { now?: Date } = {}) {
         onChange={handleToChange}
         allowedIds={validToIds}
       />
+
+      {from && <ShuttleMap from={from} to={to} />}
 
       <div className="mt-2">
         {!from || !to ? (
