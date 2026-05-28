@@ -73,14 +73,14 @@ export function ShuttleMap({ from, to }: ShuttleMapProps) {
       }
     }
 
-    // readyState === 2 이면 maps.load() 완료 → Map, Marker 등 사용 가능
-    if (window.kakao?.maps?.readyState === 2) {
-      initMap()
+    if (window.kakao?.maps) {
+      // SDK 스크립트 실행 완료 — maps.load()가 readyState(0/1/2)를 자동 처리
+      window.kakao.maps.load(initMap)
       return
     }
 
-    // KakaoMapScript onLoad에서 발행하는 이벤트 대기
-    const handler = () => initMap()
+    // SDK 스크립트 아직 미로드 — KakaoMapScript onLoad 이벤트 대기
+    const handler = () => window.kakao.maps.load(initMap)
     window.addEventListener("kakao-maps-ready", handler, { once: true })
     return () => window.removeEventListener("kakao-maps-ready", handler)
   }, [from, to])
