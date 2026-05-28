@@ -73,7 +73,8 @@ export function ShuttleMap({ from, to }: ShuttleMapProps) {
       }
     }
 
-    if (window.kakao?.maps) {
+    // readyState === 2 이면 maps.load() 완료 → Map, Marker 등 사용 가능
+    if (window.kakao?.maps?.readyState === 2) {
       initMap()
       return
     }
