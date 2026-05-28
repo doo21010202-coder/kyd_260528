@@ -21,30 +21,36 @@ export function ShuttleMap({ from, to }: ShuttleMapProps) {
   const markersRef = useRef<any[]>([])
 
   useEffect(() => {
+    console.log("[ShuttleMap] effect from:", from, "to:", to)
+    console.log("[ShuttleMap] container:", !!containerRef.current)
+    console.log("[ShuttleMap] kakao:", typeof window.kakao, "maps:", typeof window.kakao?.maps)
+
     if (!containerRef.current) return
 
     function initMap() {
+      console.log("[ShuttleMap] initMap called, container:", !!containerRef.current)
       if (!containerRef.current) return
 
       const fromStop = STOPS.find((s) => s.id === from)
       const toStop = to ? STOPS.find((s) => s.id === to) : undefined
 
+      console.log("[ShuttleMap] fromStop:", fromStop?.name, fromStop?.lat, fromStop?.lng)
       if (!fromStop?.lat || !fromStop?.lng) return
 
       const fromLatLng = new window.kakao.maps.LatLng(fromStop.lat, fromStop.lng)
 
       if (!mapRef.current) {
+        console.log("[ShuttleMap] creating map")
         mapRef.current = new window.kakao.maps.Map(containerRef.current, {
           center: fromLatLng,
           level: 4,
         })
+        console.log("[ShuttleMap] map created:", !!mapRef.current)
       }
 
-      // 기존 마커 제거
       markersRef.current.forEach((m) => m.setMap(null))
       markersRef.current = []
 
-      // 출발 마커
       const fromMarker = new window.kakao.maps.Marker({
         position: fromLatLng,
         title: fromStop.name,
@@ -52,7 +58,6 @@ export function ShuttleMap({ from, to }: ShuttleMapProps) {
       fromMarker.setMap(mapRef.current)
       markersRef.current.push(fromMarker)
 
-      // 도착 마커
       if (toStop?.lat && toStop?.lng) {
         const toLatLng = new window.kakao.maps.LatLng(toStop.lat, toStop.lng)
         const toMarker = new window.kakao.maps.Marker({
@@ -62,7 +67,6 @@ export function ShuttleMap({ from, to }: ShuttleMapProps) {
         toMarker.setMap(mapRef.current)
         markersRef.current.push(toMarker)
 
-        // 두 마커가 모두 보이도록 영역 조정
         const bounds = new window.kakao.maps.LatLngBounds()
         bounds.extend(fromLatLng)
         bounds.extend(toLatLng)
@@ -71,16 +75,20 @@ export function ShuttleMap({ from, to }: ShuttleMapProps) {
         mapRef.current.setCenter(fromLatLng)
         mapRef.current.setLevel(4)
       }
+      console.log("[ShuttleMap] done")
     }
 
     if (window.kakao?.maps) {
-      // SDK 스크립트 실행 완료 — maps.load()가 readyState(0/1/2)를 자동 처리
+      console.log("[ShuttleMap] maps exists, calling maps.load()")
       window.kakao.maps.load(initMap)
       return
     }
 
-    // SDK 스크립트 아직 미로드 — KakaoMapScript onLoad 이벤트 대기
-    const handler = () => window.kakao.maps.load(initMap)
+    console.log("[ShuttleMap] waiting for kakao-maps-ready event")
+    const handler = () => {
+      console.log("[ShuttleMap] kakao-maps-ready received")
+      window.kakao.maps.load(initMap)
+    }
     window.addEventListener("kakao-maps-ready", handler, { once: true })
     return () => window.removeEventListener("kakao-maps-ready", handler)
   }, [from, to])
