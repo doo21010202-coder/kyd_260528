@@ -28,36 +28,32 @@ describe("ShuttleFinder — 주말·공휴일 (Scenario 3)", () => {
   })
 })
 
-describe("StopSelector — 동일 정류장 방지 (Scenario 5)", () => {
-  it("출발 '복지관뒤' 선택 후 도착 드롭다운의 '복지관뒤' 항목이 aria-disabled", () => {
+describe("StopSelector — 노선 없는 정류장 숨김 (Scenario 5)", () => {
+  it("출발 '복지관뒤(1공장)' 선택 후 도착 드롭다운에 '복지관뒤(1공장)' 항목이 없음", () => {
     render(<ShuttleFinder now={WEEKDAY} />)
 
     const [departureTrigger] = screen.getAllByRole("combobox")
     fireEvent.click(departureTrigger)
-    const option = screen.getByRole("option", { name: "복지관뒤" })
-    fireEvent.click(option)
+    fireEvent.click(screen.getByRole("option", { name: "복지관뒤(1공장)" }))
 
     const [, arrivalTrigger] = screen.getAllByRole("combobox")
     fireEvent.click(arrivalTrigger)
 
-    const allOptions = screen.getAllByRole("option", { name: "복지관뒤" })
-    const arrivalOption = allOptions[allOptions.length - 1]
-    expect(arrivalOption).toHaveAttribute("aria-disabled", "true")
+    expect(screen.queryByRole("option", { name: "복지관뒤(1공장)" })).not.toBeInTheDocument()
   })
 
-  it("도착 'SAC연구동1' 선택 후 출발 드롭다운의 'SAC연구동1' 항목이 aria-disabled", () => {
+  it("도착 'SAC연구동1' 선택 후 출발 드롭다운에 'SAC연구동1' 이후 정류장이 없음", () => {
     render(<ShuttleFinder now={WEEKDAY} />)
 
     const [, arrivalTrigger] = screen.getAllByRole("combobox")
     fireEvent.click(arrivalTrigger)
-    const option = screen.getByRole("option", { name: "SAC연구동1" })
-    fireEvent.click(option)
+    fireEvent.click(screen.getByRole("option", { name: "SAC연구동1" }))
 
     const [departureTrigger] = screen.getAllByRole("combobox")
     fireEvent.click(departureTrigger)
 
-    const allOptions = screen.getAllByRole("option", { name: "SAC연구동1" })
-    const deptOption = allOptions[allOptions.length - 1]
-    expect(deptOption).toHaveAttribute("aria-disabled", "true")
+    // SAC연구동1 이후 정류장들(정문(2공장), SAC연구동2, 복지관앞(1공장))은 출발 드롭다운에 없어야 함
+    expect(screen.queryByRole("option", { name: "SAC연구동1" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("option", { name: "정문(2공장)" })).not.toBeInTheDocument()
   })
 })

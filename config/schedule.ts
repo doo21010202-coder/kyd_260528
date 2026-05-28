@@ -1,12 +1,12 @@
 import type { Stop, Run } from "@/types/shuttle"
 
 export const STOPS: Stop[] = [
-  { id: "bokji-dwi",  name: "복지관뒤" },
-  { id: "jeongmun",   name: "정문" },
+  { id: "bokji-dwi",  name: "복지관뒤(1공장)" },
+  { id: "jeongmun",   name: "정문(1공장)" },
   { id: "sac1",       name: "SAC연구동1" },
-  { id: "jeongmun2",  name: "정문②" },
+  { id: "jeongmun2",  name: "정문(2공장)" },
   { id: "sac2",       name: "SAC연구동2" },
-  { id: "bokji-ap",   name: "복지관앞" },
+  { id: "bokji-ap",   name: "복지관앞(1공장)" },
 ]
 
 // 정류장 순환 순서 (이 인덱스로 Run.times 배열이 정렬됨)

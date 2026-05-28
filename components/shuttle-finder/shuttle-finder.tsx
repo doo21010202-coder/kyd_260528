@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react"
 import { ArrowDownIcon, BusIcon, CalendarOffIcon } from "lucide-react"
 import { StopSelector } from "./stop-selector"
+import { ShuttleResult } from "./shuttle-result"
 import { isServiceDay, getNextServiceInfo } from "@/lib/shuttle"
+import { ROUTE_STOP_ORDER } from "@/config/schedule"
 import type { StopId } from "@/types/shuttle"
 
 function formatNextServiceDate(date: Date): string {
@@ -24,6 +26,26 @@ export function ShuttleFinder({ now: nowProp }: { now?: Date } = {}) {
     const id = setInterval(() => setNow(new Date()), 60_000)
     return () => clearInterval(id)
   }, [nowProp])
+
+  const fromIdx = from ? ROUTE_STOP_ORDER.indexOf(from) : -1
+  const toIdx = to ? ROUTE_STOP_ORDER.indexOf(to) : ROUTE_STOP_ORDER.length
+
+  const validFromIds = to ? ROUTE_STOP_ORDER.slice(0, toIdx) : undefined
+  const validToIds = from ? ROUTE_STOP_ORDER.slice(fromIdx + 1) : undefined
+
+  function handleFromChange(newFrom: StopId) {
+    setFrom(newFrom)
+    if (to && ROUTE_STOP_ORDER.indexOf(to) <= ROUTE_STOP_ORDER.indexOf(newFrom)) {
+      setTo("")
+    }
+  }
+
+  function handleToChange(newTo: StopId) {
+    setTo(newTo)
+    if (from && ROUTE_STOP_ORDER.indexOf(from) >= ROUTE_STOP_ORDER.indexOf(newTo)) {
+      setFrom("")
+    }
+  }
 
   const serviceDay = isServiceDay(now)
 
@@ -48,8 +70,8 @@ export function ShuttleFinder({ now: nowProp }: { now?: Date } = {}) {
       <StopSelector
         label="출발 정류장"
         value={from}
-        onChange={setFrom}
-        disabledId={to || null}
+        onChange={handleFromChange}
+        allowedIds={validFromIds}
       />
 
       <div className="flex justify-center text-muted-foreground">
@@ -59,8 +81,8 @@ export function ShuttleFinder({ now: nowProp }: { now?: Date } = {}) {
       <StopSelector
         label="도착 정류장"
         value={to}
-        onChange={setTo}
-        disabledId={from || null}
+        onChange={handleToChange}
+        allowedIds={validToIds}
       />
 
       <div className="mt-2">
@@ -72,7 +94,7 @@ export function ShuttleFinder({ now: nowProp }: { now?: Date } = {}) {
             </p>
           </div>
         ) : (
-          <div data-testid="result-area" data-from={from} data-to={to} />
+          <ShuttleResult from={from} to={to} now={now} />
         )}
       </div>
     </div>

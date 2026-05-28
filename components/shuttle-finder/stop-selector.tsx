@@ -15,15 +15,19 @@ interface StopSelectorProps {
   label: string
   value: StopId | ""
   onChange: (value: StopId) => void
-  disabledId?: StopId | null
+  allowedIds?: StopId[]
 }
 
 export function StopSelector({
   label,
   value,
   onChange,
-  disabledId,
+  allowedIds,
 }: StopSelectorProps) {
+  const visibleStops = allowedIds
+    ? STOPS.filter((s) => allowedIds.includes(s.id))
+    : STOPS
+
   return (
     <div>
       <div className="text-xs text-muted-foreground mb-1.5">{label}</div>
@@ -33,12 +37,8 @@ export function StopSelector({
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
-            {STOPS.map((stop) => (
-              <SelectItem
-                key={stop.id}
-                value={stop.id}
-                disabled={stop.id === disabledId}
-              >
+            {visibleStops.map((stop) => (
+              <SelectItem key={stop.id} value={stop.id}>
                 {stop.name}
               </SelectItem>
             ))}
