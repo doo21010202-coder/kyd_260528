@@ -21,31 +21,23 @@ export function ShuttleMap({ from, to }: ShuttleMapProps) {
   const markersRef = useRef<any[]>([])
 
   useEffect(() => {
-    console.log("[ShuttleMap] effect from:", from, "to:", to)
-    console.log("[ShuttleMap] container:", !!containerRef.current)
-    console.log("[ShuttleMap] kakao:", typeof window.kakao, "maps:", typeof window.kakao?.maps)
-
     if (!containerRef.current) return
+    const key = process.env.NEXT_PUBLIC_KAKAO_MAP_KEY
+    if (!key) return
 
     function initMap() {
-      console.log("[ShuttleMap] initMap called, container:", !!containerRef.current)
       if (!containerRef.current) return
-
       const fromStop = STOPS.find((s) => s.id === from)
       const toStop = to ? STOPS.find((s) => s.id === to) : undefined
-
-      console.log("[ShuttleMap] fromStop:", fromStop?.name, fromStop?.lat, fromStop?.lng)
       if (!fromStop?.lat || !fromStop?.lng) return
 
       const fromLatLng = new window.kakao.maps.LatLng(fromStop.lat, fromStop.lng)
 
       if (!mapRef.current) {
-        console.log("[ShuttleMap] creating map")
         mapRef.current = new window.kakao.maps.Map(containerRef.current, {
           center: fromLatLng,
           level: 4,
         })
-        console.log("[ShuttleMap] map created:", !!mapRef.current)
       }
 
       markersRef.current.forEach((m) => m.setMap(null))
@@ -66,7 +58,6 @@ export function ShuttleMap({ from, to }: ShuttleMapProps) {
         })
         toMarker.setMap(mapRef.current)
         markersRef.current.push(toMarker)
-
         const bounds = new window.kakao.maps.LatLngBounds()
         bounds.extend(fromLatLng)
         bounds.extend(toLatLng)
@@ -75,22 +66,36 @@ export function ShuttleMap({ from, to }: ShuttleMapProps) {
         mapRef.current.setCenter(fromLatLng)
         mapRef.current.setLevel(4)
       }
-      console.log("[ShuttleMap] done")
     }
 
-    if (window.kakao?.maps) {
-      console.log("[ShuttleMap] maps exists, calling maps.load()")
+    function loadMaps() {
       window.kakao.maps.load(initMap)
+    }
+
+    // 이미 SDK가 로드된 경우 바로 초기화
+    if (window.kakao?.maps) {
+      loadMaps()
       return
     }
 
-    console.log("[ShuttleMap] waiting for kakao-maps-ready event")
-    const handler = () => {
-      console.log("[ShuttleMap] kakao-maps-ready received")
-      window.kakao.maps.load(initMap)
+    // SDK 스크립트가 없으면 직접 추가
+    if (!document.getElementById("kakao-maps-sdk")) {
+      const script = document.createElement("script")
+      script.id = "kakao-maps-sdk"
+      script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${key}&autoload=false`
+      script.onload = loadMaps
+      document.head.appendChild(script)
+      return
     }
-    window.addEventListener("kakao-maps-ready", handler, { once: true })
-    return () => window.removeEventListener("kakao-maps-ready", handler)
+
+    // 스크립트 태그는 있지만 아직 로드 중인 경우 폴링
+    const interval = setInterval(() => {
+      if (window.kakao?.maps) {
+        clearInterval(interval)
+        loadMaps()
+      }
+    }, 50)
+    return () => clearInterval(interval)
   }, [from, to])
 
   return (

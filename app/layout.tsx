@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "next-themes";
-import { KakaoMapScript } from "./kakao-map-script";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -29,7 +28,6 @@ export default function RootLayout({
         `}} />
       </head>
       <body className={`${inter.variable} antialiased`}>
-        <KakaoMapScript />
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           {children}
         </ThemeProvider>
