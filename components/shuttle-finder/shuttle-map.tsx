@@ -5,9 +5,25 @@ import { STOPS } from "@/config/schedule"
 import type { StopId } from "@/types/shuttle"
 
 declare global {
-  interface Window {
-    kakao: any
-  }
+  interface Window { kakao: any }
+}
+
+// 모듈 레벨 싱글톤 — 중복 로드 방지
+let sdkPromise: Promise<void> | null = null
+
+function getKakaoMaps(key: string): Promise<void> {
+  if (sdkPromise) return sdkPromise
+  sdkPromise = new Promise<void>((resolve) => {
+    if (window.kakao?.maps) {
+      window.kakao.maps.load(resolve)
+      return
+    }
+    const script = document.createElement("script")
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${key}&autoload=false`
+    script.onload = () => window.kakao.maps.load(resolve)
+    document.head.appendChild(script)
+  })
+  return sdkPromise
 }
 
 interface ShuttleMapProps {
@@ -21,12 +37,14 @@ export function ShuttleMap({ from, to }: ShuttleMapProps) {
   const markersRef = useRef<any[]>([])
 
   useEffect(() => {
-    if (!containerRef.current) return
     const key = process.env.NEXT_PUBLIC_KAKAO_MAP_KEY
-    if (!key) return
+    if (!key || !containerRef.current) return
 
-    function initMap() {
-      if (!containerRef.current) return
+    let cancelled = false
+
+    getKakaoMaps(key).then(() => {
+      if (cancelled || !containerRef.current) return
+
       const fromStop = STOPS.find((s) => s.id === from)
       const toStop = to ? STOPS.find((s) => s.id === to) : undefined
       if (!fromStop?.lat || !fromStop?.lng) return
@@ -66,36 +84,9 @@ export function ShuttleMap({ from, to }: ShuttleMapProps) {
         mapRef.current.setCenter(fromLatLng)
         mapRef.current.setLevel(4)
       }
-    }
+    })
 
-    function loadMaps() {
-      window.kakao.maps.load(initMap)
-    }
-
-    // 이미 SDK가 로드된 경우 바로 초기화
-    if (window.kakao?.maps) {
-      loadMaps()
-      return
-    }
-
-    // SDK 스크립트가 없으면 직접 추가
-    if (!document.getElementById("kakao-maps-sdk")) {
-      const script = document.createElement("script")
-      script.id = "kakao-maps-sdk"
-      script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${key}&autoload=false`
-      script.onload = loadMaps
-      document.head.appendChild(script)
-      return
-    }
-
-    // 스크립트 태그는 있지만 아직 로드 중인 경우 폴링
-    const interval = setInterval(() => {
-      if (window.kakao?.maps) {
-        clearInterval(interval)
-        loadMaps()
-      }
-    }, 50)
-    return () => clearInterval(interval)
+    return () => { cancelled = true }
   }, [from, to])
 
   return (
