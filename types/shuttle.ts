@@ -3,6 +3,8 @@ export type StopId = string
 export interface Stop {
   id: StopId
   name: string
+  lat?: number
+  lng?: number
 }
 
 // 순환 노선의 한 회차 — 정류장 순서대로 시각 기록 (null = 해당 회차 미정차)
