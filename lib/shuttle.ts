@@ -1,4 +1,4 @@
-import { SCHEDULES, HOLIDAYS } from "@/config/schedule"
+import { ROUTE_STOP_ORDER, SCHEDULE_RUNS, HOLIDAYS } from "@/config/schedule"
 import type { ShuttleResult, NextServiceInfo, StopId } from "@/types/shuttle"
 
 function toMinutes(time: string): number {
@@ -37,17 +37,27 @@ export function getNextShuttles(
 ): ShuttleResult[] {
   if (!isServiceDay(now)) return []
 
-  const schedule = SCHEDULES.find((s) => s.from === from && s.to === to)
-  if (!schedule) return []
+  const fromIdx = ROUTE_STOP_ORDER.indexOf(from)
+  const toIdx = ROUTE_STOP_ORDER.indexOf(to)
+
+  // 유효하지 않은 방향(역방향 포함) 처리
+  if (fromIdx < 0 || toIdx < 0 || fromIdx >= toIdx) return []
 
   const nowMinutes = now.getHours() * 60 + now.getMinutes()
   const results: ShuttleResult[] = []
 
-  for (const time of schedule.times) {
+  for (const run of SCHEDULE_RUNS) {
     if (results.length >= max) break
-    const diff = toMinutes(time) - nowMinutes
+
+    const fromTime = run.times[fromIdx]
+    const toTime = run.times[toIdx]
+
+    // 출발지 또는 도착지에 미정차인 회차 제외
+    if (!fromTime || !toTime) continue
+
+    const diff = toMinutes(fromTime) - nowMinutes
     if (diff >= 0) {
-      results.push({ departureTime: time, minutesRemaining: diff })
+      results.push({ departureTime: fromTime, minutesRemaining: diff })
     }
   }
 
@@ -59,9 +69,14 @@ export function getNextServiceInfo(
   to: StopId,
   now: Date
 ): NextServiceInfo | null {
-  const schedule = SCHEDULES.find((s) => s.from === from && s.to === to)
-  if (!schedule || schedule.times.length === 0) return null
+  const fromIdx = ROUTE_STOP_ORDER.indexOf(from)
+  const toIdx = ROUTE_STOP_ORDER.indexOf(to)
+  if (fromIdx < 0 || toIdx < 0 || fromIdx >= toIdx) return null
 
-  const nextDay = getNextWeekday(now)
-  return { date: nextDay, firstTime: schedule.times[0] }
+  // 출발지에 정차하는 첫 번째 회차의 시각
+  const firstTime = SCHEDULE_RUNS.find((r) => r.times[fromIdx] !== null)
+    ?.times[fromIdx]
+  if (!firstTime) return null
+
+  return { date: getNextWeekday(now), firstTime }
 }

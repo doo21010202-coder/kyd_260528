@@ -28,9 +28,7 @@ export function ShuttleFinder({ now: nowProp }: { now?: Date } = {}) {
   const serviceDay = isServiceDay(now)
 
   if (!serviceDay) {
-    const firstStop = "bonkwan"
-    const secondStop = "yeongu"
-    const info = getNextServiceInfo(firstStop, secondStop, now)
+    const info = getNextServiceInfo("jeongmun", "sac1", now)
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
         <CalendarOffIcon className="size-10 text-muted-foreground" />

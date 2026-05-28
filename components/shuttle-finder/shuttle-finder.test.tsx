@@ -29,40 +29,35 @@ describe("ShuttleFinder — 주말·공휴일 (Scenario 3)", () => {
 })
 
 describe("StopSelector — 동일 정류장 방지 (Scenario 5)", () => {
-  it("출발 '본관' 선택 후 도착 드롭다운의 '본관' 항목이 aria-disabled", () => {
+  it("출발 '복지관뒤' 선택 후 도착 드롭다운의 '복지관뒤' 항목이 aria-disabled", () => {
     render(<ShuttleFinder now={WEEKDAY} />)
 
-    // 출발 정류장 선택 (첫 번째 combobox)
     const [departureTrigger] = screen.getAllByRole("combobox")
     fireEvent.click(departureTrigger)
-    const bonkwanOption = screen.getByRole("option", { name: "본관" })
-    fireEvent.click(bonkwanOption)
+    const option = screen.getByRole("option", { name: "복지관뒤" })
+    fireEvent.click(option)
 
-    // 도착 드롭다운 열기 (두 번째 combobox)
     const [, arrivalTrigger] = screen.getAllByRole("combobox")
     fireEvent.click(arrivalTrigger)
 
-    // 도착 드롭다운의 "본관" 항목은 aria-disabled
-    const allBonkwanOptions = screen.getAllByRole("option", { name: "본관" })
-    const arrivalBonkwan = allBonkwanOptions[allBonkwanOptions.length - 1]
-    expect(arrivalBonkwan).toHaveAttribute("aria-disabled", "true")
+    const allOptions = screen.getAllByRole("option", { name: "복지관뒤" })
+    const arrivalOption = allOptions[allOptions.length - 1]
+    expect(arrivalOption).toHaveAttribute("aria-disabled", "true")
   })
 
-  it("도착 '연구동' 선택 후 출발 드롭다운의 '연구동' 항목이 aria-disabled", () => {
+  it("도착 'SAC연구동1' 선택 후 출발 드롭다운의 'SAC연구동1' 항목이 aria-disabled", () => {
     render(<ShuttleFinder now={WEEKDAY} />)
 
-    // 도착 정류장 먼저 선택 (두 번째 combobox)
     const [, arrivalTrigger] = screen.getAllByRole("combobox")
     fireEvent.click(arrivalTrigger)
-    const yeongOption = screen.getByRole("option", { name: "연구동" })
-    fireEvent.click(yeongOption)
+    const option = screen.getByRole("option", { name: "SAC연구동1" })
+    fireEvent.click(option)
 
-    // 출발 드롭다운 열기
     const [departureTrigger] = screen.getAllByRole("combobox")
     fireEvent.click(departureTrigger)
 
-    const allYeongOptions = screen.getAllByRole("option", { name: "연구동" })
-    const departureYeong = allYeongOptions[allYeongOptions.length - 1]
-    expect(departureYeong).toHaveAttribute("aria-disabled", "true")
+    const allOptions = screen.getAllByRole("option", { name: "SAC연구동1" })
+    const deptOption = allOptions[allOptions.length - 1]
+    expect(deptOption).toHaveAttribute("aria-disabled", "true")
   })
 })
